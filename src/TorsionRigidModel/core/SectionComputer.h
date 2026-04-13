@@ -1,7 +1,7 @@
 #pragma once
 
-#include "type/TubeParameters.h"
-#include "type/Section.h"
+#include "types/TubeParameters.h"
+#include "types/Section.h"
 
 #include <vector>
 #include <array>
@@ -31,7 +31,7 @@ namespace ctr {
             * @return Ordered list of sections from proximal to distal
             */
 
-            std::vector<Section> computeSection(
+            std::vector<Section> computeSections(
                 const double alpha[],
                 const double beta[],
                 int num_tubes
@@ -50,7 +50,7 @@ namespace ctr {
             * Applies moment equalibrium to each section using the given α values.
             */
             void computeCurvature(
-                std::vector<Section>& sections;
+                std::vector<Section>& sections,
                 const double alpha[]
             ) const;
 

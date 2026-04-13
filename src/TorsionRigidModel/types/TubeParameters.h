@@ -1,7 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <array>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 namespace ctr {
@@ -19,14 +21,14 @@ namespace ctr {
         
         // magnitude of curvature vector u_i = [k_ix, k_iy, 0]
         double curvatureMagnitude() const {
-            return std::sqrt(curvature_x * curvature_x + curvature_y * curvature_y)
+            return std::sqrt(curvature_x * curvature_x + curvature_y * curvature_y);
         }
 
         // radius of curvature rho = 1 / |u|. return infinity if it's straight
         double radiusOfCurvature() const {
             double mag = curvatureMagnitude();
             if (mag < 1e-12) return std::numeric_limits<double>::infinity();
-            return 1.0/mag
+            return 1.0/mag;
         }
     };
 

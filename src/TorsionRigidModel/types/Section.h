@@ -29,7 +29,7 @@ namespace ctr {
         // applies in this section. 
         std::vector<int> segment_indices;
 
-        std::array<double, 3> resultant_curvature = [0.0, 0.0, 0.0];
+        std::array<double, 3> resultant_curvature = {0.0, 0.0, 0.0};
 
         // Arc length of this section
         double length() const {
@@ -37,7 +37,7 @@ namespace ctr {
         }
 
         double curvatureMagnitude() const {
-            return std::sqrt(resultant_curvature[0] * resultant_curvature[0] + resultant_curvature[1]);
+            return std::sqrt(resultant_curvature[0] * resultant_curvature[0] + resultant_curvature[1] * resultant_curvature[1]);
         }
 
         // Is this section essentially straight?
