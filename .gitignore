@@ -1,0 +1,12 @@
+# Ignore build artifacts
+build/
+bin/
+lib/
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.swp
+
+# Ignore OS files
+.DS_Store
