@@ -91,4 +91,55 @@ namespace Lie {
         return g;
     }
 
+    /**
+     * @brief adjoint transform from b configuration space to a configuration space Ad_{g_ba} 6x6 Matrix
+     * There are two different version of Ad_g:
+     * 1. if the twist is [v, w], the Ad_g = [R, [p]R; 0, R]
+     * 2. if the twist is [w, v], the Ad_g = [R, 0; [p]R, R] <---- we use this here
+    */
+    inline Eigen::Matrix<double, 6, 6> Adg(const Eigen::Matrix4d& g) {
+        Eigen::Matrix3d R = g.block<3,3>(0,0);
+        Eigen::Vector3d p = g.block<3,1>(0,3);
+
+        Eigen::Matrix<double, 6, 6> ad;
+
+        ad << R, Eigen::Matrix3d::Zero(),
+              hat(p)*R, R;
+
+        return ad;
+    }
+
+    /**
+     * @brief "A" Matrix belongs to the solution of [\dot{g}g] that is a function of (xi, si)
+    */
+    inline Eigen::Matrix<double,6,6> aMatrix(const Eigen::Matrix<double,6,1>& xi, const double s) {
+        Eigen::Matrix<double,6,6> aM;
+        
+        // angular and linear velocity
+        Eigen::Vector3d w = xi.head<3>();
+        Eigen::Vector3d v = xi.tail<3>();
+
+        // Omega (eq 16 in leo's paper)
+        Eigen::Matrix<double,6,6> Omega;
+        Omega << hat(w), Eigen::Matrix3d::Zero(),
+                hat(v), hat(w);
+        
+        // eq 17
+        double n = w.norm();
+        double nu = n * s;
+
+        if (std::abs(n) < 1e-8) {
+            aM = s * Eigen::Matrix<double,6,6>::Identity();
+        } else {
+            aM = s * Eigen::Matrix<double,6,6>::Identity() +
+                ((4 - nu*std::sin(nu) - 4*std::cos(nu)) / (2 * n * n) * Omega) + 
+                ((4*nu - 5*std::sin(nu) + nu*std::cos(nu)) / (2 * n * n * n) * Omega * Omega) + 
+                ((2 - nu*std::sin(nu) - 2*std::cos(nu)) / (2 * n * n * n * n) * Omega * Omega * Omega) + 
+                ((2*nu - 3*std::sin(nu) + nu*std::cos(nu)) / (2 * n * n * n * n * n) * Omega * Omega * Omega * Omega);
+        }
+
+        return aM;
+    }
+
+    
 } // namespace Lie
