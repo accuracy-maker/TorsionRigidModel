@@ -6,7 +6,7 @@
 const double EPS = 1e-8;
 
 /**
- * @brief Text fixture for Lie Group Operation
+ * @brief Test fixture for Lie Group Operation
 */
 class LieTest : public ::testing::Test {
 protected:

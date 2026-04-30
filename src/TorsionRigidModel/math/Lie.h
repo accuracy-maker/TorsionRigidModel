@@ -140,6 +140,5 @@ namespace Lie {
 
         return aM;
     }
-
     
 } // namespace Lie

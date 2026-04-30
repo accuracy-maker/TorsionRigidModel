@@ -24,6 +24,17 @@ target_link_libraries(test_lie
     GTest::gtest_main
 )
 
+add_executable(test_fk
+    src/TorsionRigidModel/test/test_fk.cpp
+    src/TorsionRigidModel/core/ForwardKinematics.cpp
+)
+
+target_link_libraries(test_fk
+    Eigen3::Eigen
+    GTest::gtest_main
+)
+
 # 5. Enable CTest
 enable_testing()
 add_test(NAME LieMathTest COMMAND test_lie)
+add_test(NAME ForwardKinematicsTest COMMAND test_fk)
