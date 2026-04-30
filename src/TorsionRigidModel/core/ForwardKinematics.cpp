@@ -1,3 +1,13 @@
+/**
+ * @file ForwardKinematics.cpp
+ * @author Haitao Gao (haitao.gao@unsw.edu.au)
+ * @brief Forward Kinematics implementation of Product of Matrix Exponential
+ * @version 0.1
+ * @date 2026-04-30
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #include "ForwardKinematics.h"
 #include <cmath>
 #include <iostream>

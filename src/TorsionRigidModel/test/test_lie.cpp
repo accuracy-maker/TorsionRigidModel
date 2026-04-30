@@ -1,4 +1,13 @@
-/* Test the math/lie.h file by google testing */
+/**
+ * @file test_lie.cpp
+ * @author Haitao Gao (haitao.gao@unsw.edu.au)
+ * @brief Testing for Lie group and lie algebra
+ * @version 0.1
+ * @date 2026-04-30
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #include <gtest/gtest.h>
 #include "math/Lie.h"
 #include <Eigen/Dense>

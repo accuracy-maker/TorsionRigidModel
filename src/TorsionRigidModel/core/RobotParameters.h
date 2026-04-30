@@ -1,3 +1,13 @@
+/**
+ * @file RobotParameters.h
+ * @author Haitao Gao (haitao.gao@unsw.edu.au)
+ * @brief CTR's parameters (fixed)
+ * @version 0.1
+ * @date 2026-04-30
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #pragma once
 #include <Eigen/Dense>
 #include <cmath>

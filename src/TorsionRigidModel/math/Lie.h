@@ -1,3 +1,14 @@
+/**
+ * @file Lie.h
+ * @author Haitao Gao (haitao.gao@unsw.edu.au)
+ * @brief Lie group and Lie algebra
+ * @version 0.1
+ * @date 2026-04-30
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
+
 #pragma once
 
 #include <Eigen/Dense>

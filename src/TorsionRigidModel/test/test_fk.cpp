@@ -1,3 +1,14 @@
+/**
+ * @file test_fk.cpp
+ * @author Haitao Gao (haitao.gao@unsw.edu.au)
+ * @brief Testing for ForwardKinematics
+ * @version 0.1
+ * @date 2026-04-30
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
+
 #include <gtest/gtest.h>
 #include "core/ForwardKinematics.h"
 #include <Eigen/Dense>
