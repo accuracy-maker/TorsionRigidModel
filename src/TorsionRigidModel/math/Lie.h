@@ -151,5 +151,54 @@ namespace Lie {
 
         return aM;
     }
+
+    /**
+     * @brief Convert Rotation matrix R to quaternion Q = (w, x, y, z);
+     * Shepperd's Method (1978) 
+     * @param R rotation matrix: R = [cos(theta), -sin(theta), 0]
+                                     [sin(theta),  cos(theta), 0]
+                                     [0         ,      0,      1]
+       @return Q quaternion
+     */
+    inline Eigen::Matrix<double,4,1> Rot2Quat(const Eigen::Matrix3d& R) {
+        double trace = R.trace();
+
+        double w, x, y, z;
+        
+        Eigen::Matrix<double,4,1> Q;
+
+        // compare which is largest among {trace, R(0,0), R(1,1), R(2,2)}
+        // 4 branches
+        if (trace > 0) {
+            double s = 0.5 / std::sqrt(trace + 1.0);
+            w = 0.25 / s;
+            x = (R(2,1) - R(1,2)) * s;
+            y = (R(0,2) - R(2,0)) * s;
+            z = (R(1,0) - R(0,1)) * s;
+        } else if (R(0,0) > R(1,1) && R(0,0) > R(2,2)) {
+            double s = 2.0 * std::sqrt(1.0 + R(0,0) - R(1,1) - R(2,2));
+            w = (R(2,1) - R(1,2)) / s;
+            x = 0.25 * s;
+            y = (R(0,1) + R(1,0)) / s;
+            z = (R(0,2) + R(2,0)) / s;
+        } else if (R(1,1) > R(2,2)) {
+            double s = 2.0 * std::sqrt(1.0 + R(1,1) - R(0,0) - R(2,2));
+            w = (R(0,2) - R(2,0)) / s;
+            x = (R(0,1) + R(1,0)) / s;
+            y = 0.25 * s;
+            z = (R(1,2) + R(2,1)) / s;
+        } else {
+            double s = 2.0 * std::sqrt(1.0 + R(2,2) - R(0,0) - R(1,1));
+            w = (R(1,0) - R(0,1)) / s;
+            x = (R(0,2) + R(2,0)) / s;
+            y = (R(1,2) + R(2,1)) / s;
+            z = 0.25 * s;
+        }
+
+        Q << w, x, y, z;
+
+        return Q;
+
+    }
     
 } // namespace Lie

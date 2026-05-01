@@ -241,3 +241,22 @@ TEST_F(LieTest, AMatrixGeneral) {
     std::cout << "Input s:\n" << s << std::endl;
     std::cout << "Output aM:\n" << aM << std::endl;
 }
+
+// test 10. Rotation matrix to Quaternion
+TEST_F(LieTest, Roz2QuatTest) {
+    Eigen::Vector3d omega(0, 2*M_PI, 0);
+    Eigen::Vector3d v(0, 0, 1);
+    Eigen::Matrix<double, 6, 1> xi;
+    xi.head<3>() = omega;
+    xi.tail<3>() = v;
+
+    Eigen::Matrix4d g = Lie::exp(xi);
+
+    Eigen::Matrix3d R = g.block<3,3>(0,0);
+
+    Eigen::Matrix<double,4,1> Q = Lie::Rot2Quat(R);
+
+    std::cout << "Input rotation matrix is:\n" << R << std::endl;
+    std::cout << "Output quaternion vector is:\n" << Q << std::endl;
+
+}
