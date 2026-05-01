@@ -34,7 +34,19 @@ target_link_libraries(test_fk
     GTest::gtest_main
 )
 
+add_executable(test_ik
+    src/TorsionRigidModel/test/test_ik.cpp
+    src/TorsionRigidModel/core/InverseKinematics.cpp
+    src/TorsionRigidModel/core/ForwardKinematics.cpp
+)
+
+target_link_libraries(test_ik
+    Eigen3::Eigen
+    GTest::gtest_main
+)
+
 # 5. Enable CTest
 enable_testing()
 add_test(NAME LieMathTest COMMAND test_lie)
 add_test(NAME ForwardKinematicsTest COMMAND test_fk)
+add_test(NAME InverseKinematicsTest COMMAND test_ik)

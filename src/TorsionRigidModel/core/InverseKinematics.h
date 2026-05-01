@@ -12,6 +12,7 @@
 
 #include "RobotParameters.h"
 #include "math/Lie.h"
+#include "ForwardKinematics.h"
 
 #include <Eigen/Dense>
 
@@ -26,14 +27,13 @@ namespace CTR {
          * @return: joint configuration \delta q
         */
 
-        static Eigen::Matrix<double,6,1> IK(const Eigen::Vector3d& P, const Eigen::Vector3d& q0);
-    
-    private:
+        static Eigen::Matrix<double,6,1> IK(const Eigen::Vector3d& P, const Eigen::Matrix<double,6,1>& q0);
+
         /**
          * @brief Jacobian is a matrix that maps individual joint's velocity to the end-effector's velocity
          * Traditionally, it's just a differential representation of FK mapping
          * In screw motion, we use g^{dot}g^{-1} to represent the instantaneous spatial velocity so that we have a different formulas of Jacobian matrix.
         */
         static Eigen::Matrix<double,6,6> Jacobian(const Eigen::Matrix<double,6,1>& q);
-    }
+    };
 }

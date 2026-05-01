@@ -24,7 +24,6 @@ namespace CTR {
         */
         static Eigen::Matrix4d FK(const Eigen::Matrix<double,6,1>& q);
 
-    private:
         /// Rotation matrix about the z-axis by angle theta (radians)
         static Eigen::Matrix3d rotz(double theta);
     };
