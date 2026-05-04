@@ -1,52 +1,51 @@
-cmake_minimum_required(VERSION 3.14)
-project(TorsionRigidModel)
+cmake_minimum_required(VERSION 3.22)
 
-# Use C++17 for Eigen and GTest compatibility
+project(TorsionRigidModel VERSION 0.1)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 1. Find Dependencies
+find_package(Sofa.Framework REQUIRED)
 find_package(Eigen3 REQUIRED)
-# This looks for GTest on your system (e.g., installed via apt, brew, or vcpkg)
-find_package(GTest REQUIRED)
 
-# 2. Include Directories
-# This allows you to #include "math/Lie.h" from your test files
-include_directories(src/TorsionRigidModel)
+set(TRM_SOURCE_DIR src/TorsionRigidModel)
 
-# 3. Create the Test Executable
-add_executable(test_lie src/TorsionRigidModel/test/test_lie.cpp)
-
-# 4. Link Libraries
-# We link Eigen3 and the Google Test main entry point
-target_link_libraries(test_lie 
-    Eigen3::Eigen 
-    GTest::gtest_main
+set(HEADER_FILES
+    ${TRM_SOURCE_DIR}/math/Lie.h
+    ${TRM_SOURCE_DIR}/core/RobotParameters.h
+    ${TRM_SOURCE_DIR}/core/ForwardKinematics.h
+    ${TRM_SOURCE_DIR}/core/InverseKinematics.h
+    ${TRM_SOURCE_DIR}/Engine/TRMForwardKinematicsEngine.h
+    ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.h
 )
 
-add_executable(test_fk
-    src/TorsionRigidModel/test/test_fk.cpp
-    src/TorsionRigidModel/core/ForwardKinematics.cpp
+set(SOURCE_FILES
+    ${TRM_SOURCE_DIR}/core/ForwardKinematics.cpp
+    ${TRM_SOURCE_DIR}/core/InverseKinematics.cpp
+    ${TRM_SOURCE_DIR}/Engine/TRMForwardKinematicsEngine.cpp
+    ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.cpp
 )
 
-target_link_libraries(test_fk
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+            "$<INSTALL_INTERFACE:include>"
+    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/TorsionRigidModel>"
+)
+
+target_link_libraries(${PROJECT_NAME}
+    Sofa.Core
     Eigen3::Eigen
-    GTest::gtest_main
 )
 
-add_executable(test_ik
-    src/TorsionRigidModel/test/test_ik.cpp
-    src/TorsionRigidModel/core/InverseKinematics.cpp
-    src/TorsionRigidModel/core/ForwardKinematics.cpp
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    COMPILE_FLAGS "-DSOFA_BUILD_TORSIONRIGIDMODEL"
 )
 
-target_link_libraries(test_ik
-    Eigen3::Eigen
-    GTest::gtest_main
-)
-
-# 5. Enable CTest
-enable_testing()
-add_test(NAME LieMathTest COMMAND test_lie)
-add_test(NAME ForwardKinematicsTest COMMAND test_fk)
-add_test(NAME InverseKinematicsTest COMMAND test_ik)
+cmake_dependent_option(TRM_BUILD_TESTS "Build TorsionRigidModel tests" ON
+    "SOFA_BUILD_TESTS OR NOT DEFINED SOFA_BUILD_TESTS" OFF)
+if(TRM_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(src/TorsionRigidModel/test)
+endif()

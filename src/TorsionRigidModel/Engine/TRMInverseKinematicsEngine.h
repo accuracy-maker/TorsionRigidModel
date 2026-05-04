@@ -19,6 +19,8 @@
 namespace TRMCTR::engine
 {
 
+using sofa::core::objectmodel::Data;
+
 /**
  * SOFA DataEngine wrapping CTR::InverseKinematics::IK().
  *

@@ -18,6 +18,8 @@
 namespace TRMCTR::engine
 {
 
+using sofa::core::objectmodel::Data;
+
 /**
  * SOFA DataEngine wrapping CTR::ForwardKinematics::FK().
  *
