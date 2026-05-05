@@ -57,4 +57,45 @@ Eigen::Matrix4d ForwardKinematics::FK(const Eigen::Matrix<double,6,1>& q){
     return g;
 }
 
+std::vector<Eigen::Vector3d> ForwardKinematics::backbone(const Eigen::Matrix<double,6,1>& q, int nSamples)
+{
+    double theta1 = q(0), s1 = q(1), theta2 = q(2), s2 = q(3), theta3 = q(4), s3 = q(5);
+
+    Eigen::Matrix3d K123inv = (RobotParameters::K1 + RobotParameters::K2 + RobotParameters::K3).inverse();
+    Eigen::Matrix3d K23inv  = (RobotParameters::K2 + RobotParameters::K3).inverse();
+
+    Eigen::Matrix<double,6,1> xi1, xi2, xi3;
+    xi1 << K123inv*(RobotParameters::K1*rotz(theta1)*RobotParameters::U1F1 +
+                    RobotParameters::K2*rotz(theta2)*RobotParameters::U2F2 +
+                    RobotParameters::K3*rotz(theta3)*RobotParameters::U3F3), 0,0,1;
+    xi2 << K23inv*(RobotParameters::K2*rotz(theta2)*RobotParameters::U2F2 +
+                   RobotParameters::K3*rotz(theta3)*RobotParameters::U3F3), 0,0,1;
+    xi3 << rotz(theta3)*RobotParameters::U3F3, 0,0,1;
+
+    // accumulated base transforms at section boundaries
+    Eigen::Matrix4d g1 = Lie::exp(xi1 * s1);
+    Eigen::Matrix4d g2 = g1 * Lie::exp(xi2 * s2);
+
+    std::vector<Eigen::Vector3d> points;
+    points.reserve(3 * nSamples + 1);
+    points.push_back(Eigen::Vector3d::Zero());
+
+    auto sample = [&](const Eigen::Matrix4d& gBase,
+                      const Eigen::Matrix<double,6,1>& xi,
+                      double sMax)
+    {
+        for (int i = 1; i <= nSamples; ++i)
+        {
+            double s = sMax * i / nSamples;
+            points.push_back((gBase * Lie::exp(xi * s)).block<3,1>(0,3));
+        }
+    };
+
+    sample(Eigen::Matrix4d::Identity(), xi1, s1);
+    sample(g1,                          xi2, s2);
+    sample(g2,                          xi3, s3);
+
+    return points;
+}
+
 } // namespace CTR

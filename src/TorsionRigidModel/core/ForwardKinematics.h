@@ -26,5 +26,8 @@ namespace CTR {
 
         /// Rotation matrix about the z-axis by angle theta (radians)
         static Eigen::Matrix3d rotz(double theta);
+
+        /// discreted backbone for visual model
+        static std::vector<Eigen::Vector3d> backbone(const Eigen::Matrix<double,6,1>& q, int nSamples);
     };
 } // namespace CTR

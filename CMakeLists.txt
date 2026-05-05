@@ -16,14 +16,14 @@ set(HEADER_FILES
     ${TRM_SOURCE_DIR}/core/ForwardKinematics.h
     ${TRM_SOURCE_DIR}/core/InverseKinematics.h
     ${TRM_SOURCE_DIR}/Engine/TRMForwardKinematicsEngine.h
-    ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.h
+    # ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.h
 )
 
 set(SOURCE_FILES
     ${TRM_SOURCE_DIR}/core/ForwardKinematics.cpp
     ${TRM_SOURCE_DIR}/core/InverseKinematics.cpp
     ${TRM_SOURCE_DIR}/Engine/TRMForwardKinematicsEngine.cpp
-    ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.cpp
+    # ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
