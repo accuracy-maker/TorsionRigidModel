@@ -10,3 +10,6 @@ lib/
 
 # Ignore OS files
 .DS_Store
+
+# Dev log (local only)
+log.md

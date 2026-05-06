@@ -10,8 +10,9 @@
 
 #include <sofa/core/ObjectFactory.h>
 
-namespace TRMCTR::engine   { extern void registerTRMForwardKinematicsEngine(sofa::core::ObjectFactory*); }
-namespace TRMCTR::visual   { extern void registerTRMVisualModel(sofa::core::ObjectFactory*); }
+namespace TRMCTR::engine     { extern void registerTRMForwardKinematicsEngine(sofa::core::ObjectFactory*); }
+namespace TRMCTR::controller { extern void registerTRMInverseKinematicsController(sofa::core::ObjectFactory*); }
+namespace TRMCTR::visual     { extern void registerTRMVisualModel(sofa::core::ObjectFactory*); }
 
 extern "C" {
 
@@ -29,6 +30,7 @@ const char* getModuleDescription()
 void registerObjects(sofa::core::ObjectFactory* factory)
 {
     TRMCTR::engine::registerTRMForwardKinematicsEngine(factory);
+    TRMCTR::controller::registerTRMInverseKinematicsController(factory);
     TRMCTR::visual::registerTRMVisualModel(factory);
 }
 

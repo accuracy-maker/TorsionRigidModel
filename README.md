@@ -6,136 +6,185 @@ A SOFA plugin implementing forward and inverse kinematics for a **3-tube Concent
 
 Concentric Tube Robots are slender continuum robots made of nested pre-curved elastic tubes. Each tube can rotate and translate independently, giving the robot 6 degrees of freedom. By exploiting the tubes' elastic interactions, the robot can navigate complex curved anatomical paths — making CTRs well-suited for minimally invasive surgery.
 
-This plugin provides the mathematical core for simulating a 3-tube CTR within the SOFA simulation framework:
+This plugin provides:
 
-- **Lie group operations** on SE(3) and se(3): hat/vee operators, exponential map, adjoint transforms, and the specialised A-matrix
-- **Forward kinematics (FK)** via the Product of Matrix Exponentials (PoME) method
-- **Inverse kinematics (IK)** via a Jacobian-based Newton-Raphson solver with joint-limit enforcement
-- **Unit tests** for all three components using GoogleTest
+- **Lie group operations** on SE(3) and se(3): hat/vee operators, exponential map, adjoint transforms, and the A-matrix
+- **Forward kinematics (FK)** via the Product of Matrix Exponentials (PoME) method — wrapped as a SOFA `DataEngine`
+- **Inverse kinematics (IK)** via a Jacobian-based Newton-Raphson solver — wrapped as a per-frame SOFA `BaseObject` controller
+- **Visual model** rendering the CTR backbone as a coloured polyline
+- **Unit tests** for all core components using GoogleTest
+
+---
 
 ## Code Structure
 
 ```
 TorsionRigidModel/
 ├── CMakeLists.txt
-├── LICENSE                         (GPL v3)
-└── src/
-    └── TorsionRigidModel/
-        ├── math/
-        │   └── Lie.h               Lie group / algebra operations (SE(3), se(3))
-        ├── core/
-        │   ├── RobotParameters.h   Physical constants: stiffness, curvatures, joint limits
-        │   ├── ForwardKinematics.h
-        │   ├── ForwardKinematics.cpp
-        │   ├── InverseKinematics.h
-        │   └── InverseKinematics.cpp
-        ├── test/
-        │   ├── test_lie.cpp        9 unit tests for Lie operations
-        │   ├── test_fk.cpp         FK validity tests (SE(3) membership)
-        │   └── test_ik.cpp         Jacobian shape + IK convergence tests
-        ├── Constraint/             (placeholder — not yet implemented)
-        ├── Engine/                 (placeholder — not yet implemented)
-        ├── ForceField/             (placeholder — not yet implemented)
-        └── Mapping/                (placeholder — not yet implemented)
+├── LICENSE
+└── src/TorsionRigidModel/
+    ├── initTorsionRigidModel.cpp       plugin entry point
+    ├── math/
+    │   └── Lie.h                       Lie group / algebra operations (SE(3), se(3))
+    ├── core/
+    │   ├── RobotParameters.h           physical constants: stiffness, curvatures, joint limits
+    │   ├── ForwardKinematics.h/cpp     FK algorithm (PoME)
+    │   └── InverseKinematics.h/cpp     IK algorithm (Newton-Raphson)
+    ├── Engine/
+    │   └── TRMForwardKinematicsEngine.h/cpp    SOFA DataEngine wrapping FK
+    ├── Controller/
+    │   └── TRMInverseKinematicsEngine.h/cpp    SOFA BaseObject controller wrapping IK
+    ├── Visual/
+    │   └── TRMVisualModel.h/cpp        SOFA VisualModel rendering the CTR backbone
+    └── test/
+        ├── test_lie.cpp                Lie group unit tests
+        ├── test_fk.cpp                 FK validity tests (SE(3) membership)
+        ├── test_ik.cpp                 Jacobian shape + IK convergence tests
+        └── test_sofa_engine.cpp        SOFA integration tests
+
+scenes/
+├── CTR_visual_fk_test.py              interactive FK demo (keyboard control)
+└── CTR_visual_ik_test.py              interactive IK demo (target teleoperation)
 ```
 
-### Key Components
+---
 
-#### `math/Lie.h` — Lie Group Mathematics
+## SOFA Components
 
-All operations live in the `Lie` namespace.
+### `TRMForwardKinematicsEngine` — FK DataEngine
 
-| Function | Description |
+| | |
 |---|---|
-| `hat(Vector3d)` → `Matrix3d` | so(3) hat: vector → skew-symmetric matrix |
-| `vee(Matrix3d)` → `Vector3d` | so(3) vee: inverse of hat |
-| `hat(Matrix<6,1>)` → `Matrix4d` | se(3) hat: twist → 4×4 matrix |
-| `vee(Matrix4d)` → `Matrix<6,1>` | se(3) vee: inverse of hat |
-| `exp(Matrix<6,1>)` → `Matrix4d` | Exponential map se(3) → SE(3) |
-| `Adg(Matrix4d)` → `Matrix<6,6>` | Adjoint representation of a group element |
-| `aMatrix(Matrix<6,1>, double)` | Integration matrix for curved-section Jacobian |
+| **Base class** | `sofa::core::DataEngine` |
+| **Namespace** | `TRMCTR::engine` |
+| **Trigger** | Lazy — recomputes when `d_jointConfig` changes |
 
-#### `core/ForwardKinematics` — FK via Product of Matrix Exponentials
+| Field | Direction | Type | Description |
+|---|---|---|---|
+| `d_jointConfig` | input | `Vec<6, double>` | `[θ₁, s₁, θ₂, s₂, θ₃, s₃]` (rad, mm) |
+| `d_endEffectorPose` | output | `Rigid3Coord` | SE(3) tip pose (position + quaternion) |
 
-Given a joint configuration **q = [θ₁, s₁, θ₂, s₂, θ₃, s₃]**, computes the tip pose as a 4×4 SE(3) transformation:
+---
+
+### `TRMInverseKinematicsController` — IK Controller
+
+| | |
+|---|---|
+| **Base class** | `sofa::core::objectmodel::BaseObject` |
+| **Namespace** | `TRMCTR::controller` |
+| **Trigger** | `AnimateBeginEvent` — one Newton-Raphson step per animation frame |
+
+| Field | Direction | Type | Description |
+|---|---|---|---|
+| `d_targetPosition` | input | `Vec3d` | target end-effector position (mm) |
+| `d_jointConfig` | output | `Vec<6, double>` | updated joint config after one IK step |
+
+Internal state `m_jointConfig` (init: `[0, 50, 0, 50, 0, 50]`) carries the solution across frames, enabling iterative convergence during teleoperation.
+
+---
+
+### `TRMVisualModel` — Backbone Visual Model
+
+| | |
+|---|---|
+| **Base class** | `sofa::core::visual::VisualModel` |
+| **Namespace** | `TRMCTR::visual` |
+
+| Field | Direction | Type | Description |
+|---|---|---|---|
+| `d_jointConfig` | input | `Vec<6, double>` | joint config (link from FK engine or IK controller) |
+| `d_nSamples` | input | `int` | samples per section (default 20) |
+
+Renders the backbone as a coloured polyline: **blue** (section 1), **green** (section 2), **red** (section 3).
+
+---
+
+## Scene Files
+
+### FK Test — `CTR_visual_fk_test.py`
+
+Direct joint-space control. Keyboard maps to joint config → FK engine → visual model.
 
 ```
-g = exp(ξ₁·s₁) · exp(ξ₂·s₂) · exp(ξ₃·s₃)
+CTRKeyboardController ──► d_jointConfig ──► TRMForwardKinematicsEngine ──► TRMVisualModel
 ```
 
-Each twist ξᵢ encodes the resultant curvature of that tube section, calculated from the tubes' stiffness matrices **Kᵢ** and intrinsic curvatures **uᵢ** rotated by θᵢ.
+| Key | Action |
+|---|---|
+| `1` / `2` / `3` | Select active tube |
+| `↑` / `↓` | Extend / retract arc length s |
+| `←` / `→` | Rotate θ CCW / CW |
 
-#### `core/InverseKinematics` — Jacobian-based IK
+### IK Test — `CTR_visual_ik_test.py`
 
-Given a target position **P ∈ ℝ³** and an initial guess **q₀**, returns an updated joint configuration:
+Target teleoperation. Keyboard sets target position → IK controller converges one step per frame → FK computes tip for readout → visual model renders result.
 
 ```
-δq = W · Jᵀ · (J · W · Jᵀ + εI)⁻¹ · e
-q  = q₀ + δq
+IKTargetController ──► d_targetPosition ──► TRMInverseKinematicsController
+                                                       │
+                                               d_jointConfig
+                                              ╱               ╲
+                        TRMForwardKinematicsEngine         TRMVisualModel
+                            (tip readout)                  (backbone render)
 ```
 
-where **e** is the position error and **W** is a diagonal weight matrix that emphasises translation DOFs. Joint limits (extension and rotation bounds from `RobotParameters`) are enforced by clamping.
+| Key | Action |
+|---|---|
+| `1` / `2` / `3` | Select X / Y / Z axis |
+| `↑` / `↓` | Move target ±5 mm along selected axis |
 
-#### `core/RobotParameters.h` — Physical Constants
+Console prints target position, current tip position, and Euclidean error every 50 frames and on every keypress.
 
-Defines the static parameters for the 3-tube robot:
+---
+
+## Robot Parameters
+
+Defined in `core/RobotParameters.h`:
 
 | Parameter | Description |
 |---|---|
-| `K1, K2, K3` | Stiffness matrices (100I, 10I, 0) |
-| `U1F1, U2F2, U3F3` | Intrinsic curvature vectors per tube |
-| `S{1,2,3}_{MAX,MIN}` | Tube extension limits (mm) |
-| `THETA_{MAX,MIN}` | Rotation limits (±π) |
+| `K1, K2, K3` | Stiffness matrices per tube (3×3 diagonal, Nm²) |
+| `U1F1, U2F2, U3F3` | Intrinsic curvature vectors per tube (1/mm) |
+| `S{1,2,3}_{MIN,MAX}` | Arc length limits per tube (mm) |
+| `THETA_{MIN,MAX}` | Rotation limits (±π rad) |
+
+Joint configuration convention: **`q = [θ₁, s₁, θ₂, s₂, θ₃, s₃]`**
+
+---
 
 ## Dependencies
 
-- **C++17**
-- **Eigen3** — linear algebra
-- **GoogleTest** — unit testing
+| Dependency | Purpose |
+|---|---|
+| **SOFA Framework** (`Sofa.Core`, `Sofa.GL`) | simulation framework |
+| **Sofa.Simulation.Core** | `AnimateBeginEvent` for per-frame IK |
+| **Eigen3** | linear algebra |
+| **GoogleTest** | unit testing |
 
-On Ubuntu/Debian:
+---
 
-```bash
-sudo apt install libeigen3-dev libgtest-dev cmake ninja-build
-```
+## Build
 
-## Build and Test
-
-Build output goes into a `build/` directory inside the plugin folder.
-
-```bash
-# 1. Create the build directory
-mkdir -p /home/xxx/sofa/src/applications/plugins/TorsionRigidModel/build
-cd /home/xxx/sofa/src/applications/plugins/TorsionRigidModel/build
-
-# 2. Configure with CMake
-cmake ..
-
-# 3. Compile
-make
-
-# 4. Run all tests via CTest
-ctest --output-on-failure
-```
-
-Or run each test binary directly:
+This plugin is built as part of SOFA. From the SOFA root:
 
 ```bash
-# Lie group / algebra tests
-./test_lie
+# Configure — enable the plugin
+cmake -S src -B build -G Ninja -DPLUGIN_TORSIONRIGIDMODEL=ON
 
-# Forward kinematics tests
-./test_fk
+# Build
+cmake --build build
 
-# Inverse kinematics tests
-./test_ik
+# Run tests
+ctest --test-dir build -V -R TorsionRigidModel
 ```
 
-To run a single named test:
+To run a single test binary:
 
 ```bash
-./test_ik --gtest_filter=InverseKinematicsTest.InverseKinematicsConverges
+./build/bin/TorsionRigidModel_test --gtest_filter=InverseKinematicsTest.InverseKinematicsConverges
 ```
+
+---
 
 ## Author
 
