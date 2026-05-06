@@ -94,6 +94,37 @@ void TRMVisualModel::doDrawVisual(const sofa::core::visual::VisualParams* vparam
 }
 
 
+// ----------------------------------------------------------------------------
+// computeBBox — gives qglviewer a correct scene radius so near/far clip planes
+// are computed properly; without this the viewer clips geometry at some angles.
+// ----------------------------------------------------------------------------
+void TRMVisualModel::computeBBox(const sofa::core::ExecParams* /*params*/, bool /*onlyVisible*/)
+{
+    const Vec6& q_sofa = d_jointConfig.getValue();
+    const int   N      = d_nSamples.getValue();
+
+    Eigen::Matrix<double,6,1> q;
+    for (int i = 0; i < 6; ++i) q(i) = q_sofa[i];
+
+    std::vector<Eigen::Vector3d> points = CTR::ForwardKinematics::backbone(q, N);
+
+    constexpr double margin = 2.0; // accounts for the widest tube radius (1.5 mm)
+    sofa::type::Vec3d minBB( 1e10,  1e10,  1e10);
+    sofa::type::Vec3d maxBB(-1e10, -1e10, -1e10);
+
+    for (const auto& p : points)
+    {
+        minBB[0] = std::min(minBB[0], p.x() - margin);
+        minBB[1] = std::min(minBB[1], p.y() - margin);
+        minBB[2] = std::min(minBB[2], p.z() - margin);
+        maxBB[0] = std::max(maxBB[0], p.x() + margin);
+        maxBB[1] = std::max(maxBB[1], p.y() + margin);
+        maxBB[2] = std::max(maxBB[2], p.z() + margin);
+    }
+
+    this->f_bbox.setValue(sofa::type::BoundingBox(minBB, maxBB));
+}
+
 void registerTRMVisualModel(sofa::core::ObjectFactory* factory)
 {
     factory->registerObjects(sofa::core::ObjectRegistrationData("CTR backbone visual model: draws the 3-section tube backbone as a coloured polyline.")

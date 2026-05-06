@@ -12,8 +12,10 @@
 
 #include <sofa/core/visual/VisualModel.h>
 #include <sofa/core/visual/VisualParams.h>
+#include <sofa/core/ExecParams.h>
 #include <sofa/type/Vec.h>
 #include <sofa/type/RGBAColor.h>
+#include <sofa/type/BoundingBox.h>
 
 #include "core/ForwardKinematics.h"
 
@@ -51,6 +53,7 @@ public:
     // -------------------------------------------------------- SOFA life-cycle
     void doInitVisual(const sofa::core::visual::VisualParams* vparams) override;
     void doDrawVisual(const sofa::core::visual::VisualParams* vparams) override;
+    void computeBBox(const sofa::core::ExecParams* params, bool onlyVisible = false) override;
 
 protected:
     TRMVisualModel();

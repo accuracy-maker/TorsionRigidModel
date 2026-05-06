@@ -3,7 +3,7 @@ from Sofa.constants import Key
 import math
 
 # Joint limits matching RobotParameters.h
-S_MIN   = [10.0, 10.0, 25.0]
+S_MIN   = [1.0, 1.0, 5.0]
 S_MAX   = [100.0, 100.0, 100.0]
 THETA_MIN = -math.pi
 THETA_MAX =  math.pi
@@ -82,6 +82,14 @@ def createScene(rootNode):
 
     rootNode.addObject('DefaultAnimationLoop')
     rootNode.addObject('VisualStyle', displayFlags='showVisualModels')
+
+    rootNode.addObject('InteractiveCamera', name='camera',
+                       position=[0, 0, 300],
+                       lookAt=[0, 0, 50],
+                       distance=300,
+                       fieldOfView=45,
+                       zNear=0.1,
+                       zFar=2000)
 
     fk = rootNode.addObject('TRMForwardKinematicsEngine',
                              name='fk',

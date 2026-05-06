@@ -24,15 +24,15 @@ using sofa::core::objectmodel::Data;
 /**
  * SOFA DataEngine wrapping CTR::InverseKinematics::IK().
  *
- * Runs one Newton-Raphson step per update. At each time step d_currentJointConfig
- * should be wired from the previous output to serve as the initial guess.
+ * Runs one Newton-Raphson step per SOFA frame. The joint config is kept as
+ * internal state (m_jointConfig) so each frame's result feeds the next as the
+ * initial guess — suitable for real-time teleoperation.
  *
- * Inputs
- *   d_targetPosition      target end-effector position (x, y, z)  [mm]
- *   d_currentJointConfig  current joint config used as initial guess [θ1,s1,θ2,s2,θ3,s3]
+ * Input
+ *   d_targetPosition  target end-effector position (x, y, z)  [mm]
  *
  * Output
- *   d_jointConfig         updated joint configuration after one IK step
+ *   d_jointConfig     updated joint configuration after one IK step
  */
 class TRMInverseKinematicsEngine : public sofa::core::DataEngine
 {
@@ -43,9 +43,8 @@ public:
     using Vec6 = sofa::type::Vec<6, double>;
 
     // ------------------------------------------------------------------ Data
-    Data<Vec3> d_targetPosition;     ///< input:  target end-effector position (mm)
-    Data<Vec6> m_jointConfig; ///< input:  current joint config as initial guess
-    Data<Vec6> d_jointConfig;        ///< output: updated joint config after one IK step
+    Data<Vec3> d_targetPosition; ///< input:  target end-effector position (mm)
+    Data<Vec6> d_jointConfig;    ///< output: updated joint configuration after one IK step
 
     // -------------------------------------------------------- SOFA life-cycle
     void init()     override;
@@ -55,6 +54,9 @@ public:
 protected:
     TRMInverseKinematicsEngine();
     ~TRMInverseKinematicsEngine() override = default;
+
+private:
+    Vec6 m_jointConfig; ///< internal state: carries the IK solution across frames
 };
 
 } // namespace TRMCTR::engine
