@@ -44,7 +44,7 @@ public:
 
     // ------------------------------------------------------------------ Data
     Data<Vec3> d_targetPosition;     ///< input:  target end-effector position (mm)
-    Data<Vec6> d_currentJointConfig; ///< input:  current joint config as initial guess
+    Data<Vec6> m_jointConfig; ///< input:  current joint config as initial guess
     Data<Vec6> d_jointConfig;        ///< output: updated joint config after one IK step
 
     // -------------------------------------------------------- SOFA life-cycle
