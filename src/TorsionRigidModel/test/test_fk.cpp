@@ -73,6 +73,10 @@ TEST_F(ForwardKinematicsTest, BackboneLastPointMatchesFKTip) {
     Eigen::Vector3d tip_fk = CTR::ForwardKinematics::FK(q).block<3,1>(0,3);
 
     EXPECT_NEAR((tip_backbone - tip_fk).norm(), 0.0, EPS);
+
+    std::cout << "tip backbone coordinate is:\n" << tip_backbone << std::endl;
+    std::cout << "tip fk coordinate is:\n" << tip_fk << std::endl;
+
 }
 
 TEST_F(ForwardKinematicsTest, BackboneAllPointsFinite) {

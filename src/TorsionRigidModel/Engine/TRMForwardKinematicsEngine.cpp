@@ -9,6 +9,7 @@
  */
 
 #include "TRMForwardKinematicsEngine.h"
+#include <sofa/core/ObjectFactory.h>  // ObjectRegistrationData
 
 
 namespace TRMCTR::engine
@@ -78,6 +79,12 @@ TRMForwardKinematicsEngine::toRigid3(const Eigen::Matrix4d& g)
     sofa::type::Vec3d pos(p(0), p(1), p(2));
 
     return Rigid3Coord(pos, quat);
+}
+
+void registerTRMForwardKinematicsEngine(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(sofa::core::ObjectRegistrationData("CTR Forward Kinematics DataEngine: maps joint config [theta1,s1,theta2,s2,theta3,s3] to end-effector SE(3) pose.")
+        .add<TRMForwardKinematicsEngine>());
 }
 
 } // namespace TRMCTR::engine

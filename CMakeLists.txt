@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Sofa.Framework REQUIRED)
+find_package(Sofa.GL REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 set(TRM_SOURCE_DIR src/TorsionRigidModel)
@@ -16,14 +17,17 @@ set(HEADER_FILES
     ${TRM_SOURCE_DIR}/core/ForwardKinematics.h
     ${TRM_SOURCE_DIR}/core/InverseKinematics.h
     ${TRM_SOURCE_DIR}/Engine/TRMForwardKinematicsEngine.h
-    # ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.h
+    ${TRM_SOURCE_DIR}/Controller/TRMInverseKinematicsEngine.h
+    ${TRM_SOURCE_DIR}/Visual/TRMVisualModel.h
 )
 
 set(SOURCE_FILES
+    ${TRM_SOURCE_DIR}/initTorsionRigidModel.cpp
     ${TRM_SOURCE_DIR}/core/ForwardKinematics.cpp
     ${TRM_SOURCE_DIR}/core/InverseKinematics.cpp
     ${TRM_SOURCE_DIR}/Engine/TRMForwardKinematicsEngine.cpp
-    # ${TRM_SOURCE_DIR}/Engine/TRMInverseKinematicsEngine.cpp
+    ${TRM_SOURCE_DIR}/Controller/TRMInverseKinematicsEngine.cpp
+    ${TRM_SOURCE_DIR}/Visual/TRMVisualModel.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
@@ -36,6 +40,7 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     Sofa.Core
+    Sofa.GL
     Eigen3::Eigen
 )
 
