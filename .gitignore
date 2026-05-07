@@ -13,3 +13,6 @@ lib/
 
 # Dev log (local only)
 log.md
+
+# Python cache
+__pycache__/
