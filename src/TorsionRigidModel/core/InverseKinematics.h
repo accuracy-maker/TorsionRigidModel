@@ -35,5 +35,15 @@ namespace CTR {
          * In screw motion, we use g^{dot}g^{-1} to represent the instantaneous spatial velocity so that we have a different formulas of Jacobian matrix.
         */
         static Eigen::Matrix<double,6,6> Jacobian(const Eigen::Matrix<double,6,1>& q);
+
+        /**
+         * @brief Translational sub-Jacobian mapping joint velocity to the tip point's
+         * Cartesian velocity: J_pos = [-hat(p), I3] * Jacobian(q), where p is the tip
+         * position from FK(q). The full 6x6 Jacobian() is always rank-deficient here
+         * (tube 1 has zero intrinsic curvature, so theta1 never affects the tip pose),
+         * so this 3x6 projection is what actually has full rank generically and is
+         * the appropriate basis for a positional manipulability/singularity measure.
+        */
+        static Eigen::Matrix<double,3,6> PositionJacobian(const Eigen::Matrix<double,6,1>& q);
     };
 }

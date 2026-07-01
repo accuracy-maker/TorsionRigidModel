@@ -10,6 +10,7 @@
 
 #include "TRMForwardKinematicsEngine.h"
 #include <sofa/core/ObjectFactory.h>  // ObjectRegistrationData
+#include <cmath>
 
 
 namespace TRMCTR::engine
@@ -26,6 +27,10 @@ TRMForwardKinematicsEngine::TRMForwardKinematicsEngine()
     , d_endEffectorPose(initData(&d_endEffectorPose,
                                  "d_endEffectorPose",
                                  "End-effector SE(3) pose as position + quaternion"))
+    , d_manipulability(initData(&d_manipulability,
+                                0.0,
+                                "d_manipulability",
+                                "Yoshikawa manipulability of the tip point: sqrt(det(Jp*Jp^T))"))
 {}
 
 // ----------------------------------------------------------------------------
@@ -35,6 +40,7 @@ void TRMForwardKinematicsEngine::init()
 {
     addInput(&d_jointConfig);
     addOutput(&d_endEffectorPose);
+    addOutput(&d_manipulability);
     setDirtyValue();  // force doUpdate() on first simulation step
 }
 
@@ -60,6 +66,16 @@ void TRMForwardKinematicsEngine::doUpdate()
     Eigen::Matrix4d g = CTR::ForwardKinematics::FK(q_eigen);
     // 3. write  d_endEffectorPose.setValue(toRigid3(g));
     d_endEffectorPose.setValue(toRigid3(g));
+
+    // 4. manipulability: sqrt(det(Jp*Jp^T)) of the translational (tip-point) Jacobian.
+    // The full 6x6 Jacobian is always rank-deficient here (tube 1's intrinsic curvature
+    // U1F1 is zero, so theta1 never affects the tip pose) -- its Gram determinant is
+    // identically 0 and unusable as a singularity measure. The 3x6 translational
+    // sub-Jacobian is generically full rank and gives a meaningful measure instead.
+    Eigen::Matrix<double,3,6> Jp = CTR::InverseKinematics::PositionJacobian(q_eigen);
+    double det = (Jp * Jp.transpose()).determinant();
+    double manipulability = std::sqrt(std::max(0.0, det));
+    d_manipulability.setValue(manipulability);
 }
 
 // ----------------------------------------------------------------------------

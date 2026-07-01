@@ -14,6 +14,7 @@
 #include <sofa/type/Vec.h>
 
 #include "core/ForwardKinematics.h"
+#include "core/InverseKinematics.h"
 
 namespace TRMCTR::engine
 {
@@ -38,6 +39,7 @@ using sofa::core::objectmodel::Data;
  *
  * Outputs
  *   d_endEffectorPose  SE(3) pose as (position, quaternion)
+ *   d_manipulability   Yoshikawa manipulability of the tip point: sqrt(det(Jp*Jp^T))
  */
 class TRMForwardKinematicsEngine : public sofa::core::DataEngine
 {
@@ -50,6 +52,7 @@ public:
     // ------------------------------------------------------------------ Data
     Data<Vec6>        d_jointConfig;     ///< input:  [θ1, s1, θ2, s2, θ3, s3]
     Data<Rigid3Coord> d_endEffectorPose; ///< output: position + quaternion
+    Data<double>      d_manipulability;  ///< output: sqrt(det(Jp*Jp^T)), tip-point singularity measure
 
     // -------------------------------------------------------- SOFA life-cycle
     void init()     override;

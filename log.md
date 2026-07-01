@@ -47,3 +47,29 @@
 **Issue:** `IndexError: invalid index to scalar variable` when reading tip position. Assumed `d_endEffectorPose.value` returns `[[x,y,z], [qx,qy,qz,qw]]` but SofaPython3 returns a flat array `[x, y, z, qx, qy, qz, qw]`, so `pose[0]` was a scalar.
 
 **Solution:** Changed `pose[0]` to `pose[:3]` to slice the position from the flat array.
+
+---
+
+## 2026-07-01
+
+**Task:** Build a (configuration space, workspace) dataset for the CTR via Sobol sampling, and analyse it for singularities and multiple-solution ambiguity.
+
+**Solution:** `scenes/build_dataset.py` drives a headless `TRMForwardKinematicsEngine` node (no `runSofa`/animation loop needed — reads trigger the `DataEngine`'s lazy recompute) over `scipy.stats.qmc.Sobol` samples of the 6-D joint box, using the true per-tube limits from `RobotParameters.h` (S1/S2 ∈ [10,100], S3 ∈ [25,100], θ ∈ [-π,π]). Saves `q`, tip position `x`, full pose, and `manipulability` to `dataset.npz`. `scenes/visulise_dataset.py` plots the 3-D workspace scatter (coloured by manipulability), per-joint histograms, and a manipulability histogram.
+
+---
+
+**Issue:** Wanted a `sqrt(det(J·Jᵀ))` manipulability/singularity measure per sample, but `CTR::InverseKinematics::Jacobian()` was never exposed to Python — only `TRMForwardKinematicsEngine::d_endEffectorPose` was.
+
+**Solution:** Added `d_manipulability` output to `TRMForwardKinematicsEngine`. Using the full 6×6 twist Jacobian directly produced `NaN` for most samples: `theta1` **and** `theta3` are structurally dead DOFs given the current `RobotParameters.h` (`U1F1 = U3F3 = (0,0,0)`), so two columns of the 6×6 Jacobian are always exactly zero and `det(J·Jᵀ) ≡ 0`, with float round-off randomly flipping its sign before `sqrt()`. Fixed by extracting a new `CTR::InverseKinematics::PositionJacobian()` (the 3×6 translational sub-Jacobian `[-hat(p), I₃]·J(q)`, already computed inline inside `IK()`) and using `sqrt(max(0, det(Jp·Jpᵀ)))` instead — generically full-rank, no more NaNs. `IK()` was refactored to call the same new method instead of duplicating the formula; its solve behaviour (position-only, translation error, no orientation term) was not changed.
+
+---
+
+**Task:** Distinguish "multiple q map to the same x" cases caused by genuine kinematic multiplicity vs. proximity to a singularity.
+
+**Solution:** `scenes/singularity_check.py` builds a KDTree over workspace positions `x`, finds each sample's nearest neighbour, and computes the corresponding joint-space distance (5-D, excluding the dead `theta1`, circular metric for angles). Pairs with a small `dist_x` but disproportionately large `dist_q` are anomalous; whether the pair's `manipulability` is low (near-singularity) or not (genuine multiplicity) disambiguates the cause. On the 100k dataset: ~318 distinct genuine-multiplicity pairs (real alternate solution branches, manipulability well above threshold) vs. ~182 distinct near-singularity pairs (explained by low manipulability). Noted follow-up: condition number (`σ_max/σ_min`) would be a more targeted classifier than raw manipulability here, since it isolates rank-loss specifically rather than conflating it with overall ellipsoid scale.
+
+---
+
+**Task:** Visualise two joint-space solutions side by side in SOFA to sanity-check the multiplicity/near-singularity findings.
+
+**Solution:** `TRMVisualModel` had no way to recolour or fade a CTR instance — colours were hardcoded per tube section. Added `d_useFlatColor` + `d_color` (RGBA) Data fields; transparency needed no extra plumbing since `DrawToolGL::setMaterial()` already auto-enables GL blending when `color[3] < 1`. `scenes/visualise_multiplicity.py` overlays a solid CTR (`q1`) with a transparent orange "ghost" CTR (`q2`), switchable between the `"multiplicity"` and `"near_singularity"` example pairs found by `singularity_check.py`.

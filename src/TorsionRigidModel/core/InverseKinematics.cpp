@@ -90,6 +90,16 @@ Eigen::Matrix<double,6,6> InverseKinematics::Jacobian(const Eigen::Matrix<double
     return J;
 }
 
+Eigen::Matrix<double,3,6> InverseKinematics::PositionJacobian(const Eigen::Matrix<double,6,1>& q) {
+    Eigen::Matrix4d g = ForwardKinematics::FK(q);
+    Eigen::Vector3d p = g.block<3,1>(0,3);
+
+    Eigen::Matrix<double,3,6> J_pPe;
+    J_pPe << -Lie::hat(p), Eigen::Matrix3d::Identity();
+
+    return J_pPe * Jacobian(q);
+}
+
 Eigen::Matrix<double,6,1> InverseKinematics::IK(const Eigen::Vector3d& P, const Eigen::Matrix<double,6,1>& q0) {
     /**
      * @brief one-iteration updating
@@ -97,10 +107,7 @@ Eigen::Matrix<double,6,1> InverseKinematics::IK(const Eigen::Vector3d& P, const 
      */
 
     // translation error of the P_{desired} - q_{current}
-    Eigen::Vector3d e_Z = Eigen::Vector3d::Ones(3,1); 
-    
-    // Translation part of the matrix g
-    Eigen::Vector3d Pe; 
+    Eigen::Vector3d e_Z = Eigen::Vector3d::Ones(3,1);
 
     // Initialise q
     Eigen::Matrix<double,6,1> q = q0;
@@ -111,25 +118,19 @@ Eigen::Matrix<double,6,1> InverseKinematics::IK(const Eigen::Vector3d& P, const 
     // q_{new} = q + delta_q
     Eigen::Matrix<double,6,1> delta_q;
 
-    Eigen::Matrix<double,6,6> J0, W;
+    Eigen::Matrix<double,6,6> W;
 
-    Eigen::Matrix<double,3,6> J_Z, J_ZPe;
+    Eigen::Matrix<double,3,6> J_Z;
     Eigen::Matrix3d H;
 
     // Forward a small step
     gn = ForwardKinematics::FK(q);
-    
+
     // translation error
     e_Z = P - gn.block<3,1>(0,3);
 
-    J0 = Jacobian(q);
-
-    Pe = gn.block<3,1>(0,3);
-
-    // Jacobian of Pe
-    J_ZPe << -Lie::hat(Pe), Eigen::Matrix3d::Identity();
-
-    J_Z = J_ZPe * J0;
+    // translational Jacobian of the tip point (maps joint velocity -> tip Cartesian velocity)
+    J_Z = PositionJacobian(q);
 
     W = Eigen::Matrix<double,6,6>::Identity();
 

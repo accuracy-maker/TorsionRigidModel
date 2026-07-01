@@ -24,6 +24,10 @@ TRMVisualModel::TRMVisualModel()
                              "[theta1,s1,theta2,s2,theta3,s3] (rad, mm)"))
     , d_nSamples(initData(&d_nSamples, 20, "d_nSamples",
                           "Number of sample points per section"))
+    , d_useFlatColor(initData(&d_useFlatColor, false, "d_useFlatColor",
+                              "Draw the whole tube in d_color instead of the default blue/green/red per-section scheme"))
+    , d_color(initData(&d_color, sofa::type::RGBAColor(1.0f, 0.5f, 0.0f, 1.0f), "d_color",
+                       "Flat RGBA colour used when d_useFlatColor is true (alpha<1 for transparency)"))
 {}
 
 // ----------------------------------------------------------------------------
@@ -85,12 +89,23 @@ void TRMVisualModel::doDrawVisual(const sofa::core::visual::VisualParams* vparam
             dt->drawCylinder(pts[i], pts[i + 1], radius, color);
     };
 
-    drawTube(sec1, 1.5f, sofa::type::RGBAColor::blue());
-    drawTube(sec2, 1.0f, sofa::type::RGBAColor::green());
-    drawTube(sec3, 0.75f, sofa::type::RGBAColor::red());
-
     sofa::type::Vec3d tip = sec3.back();
-    dt->drawSpheres({tip}, 1.5f, sofa::type::RGBAColor::white());
+
+    if (d_useFlatColor.getValue())
+    {
+        const sofa::type::RGBAColor& c = d_color.getValue();
+        drawTube(sec1, 1.5f, c);
+        drawTube(sec2, 1.0f, c);
+        drawTube(sec3, 0.75f, c);
+        dt->drawSpheres({tip}, 1.5f, c);
+    }
+    else
+    {
+        drawTube(sec1, 1.5f, sofa::type::RGBAColor::blue());
+        drawTube(sec2, 1.0f, sofa::type::RGBAColor::green());
+        drawTube(sec3, 0.75f, sofa::type::RGBAColor::red());
+        dt->drawSpheres({tip}, 1.5f, sofa::type::RGBAColor::white());
+    }
 }
 
 

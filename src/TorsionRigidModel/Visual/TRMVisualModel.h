@@ -34,10 +34,14 @@ using sofa::core::objectmodel::Data;
  *     d_nSamples="20" />
  * @endcode
  *
- * Each section is drawn in a distinct colour:
+ * By default each section is drawn in a distinct colour:
  *   Section 1 (all tubes)   — blue
  *   Section 2 (tubes 2+3)   — green
  *   Section 3 (tube 3 only) — red
+ *
+ * Set d_useFlatColor=true to instead draw the whole tube (all sections + tip)
+ * in a single d_color, e.g. to overlay a second CTR instance for comparison.
+ * d_color's alpha channel controls transparency (alpha<1 is blended).
  */
 class TRMVisualModel : public sofa::core::visual::VisualModel
 {
@@ -47,8 +51,10 @@ public:
     using Vec6 = sofa::type::Vec<6, double>;
 
     // ------------------------------------------------------------------ Data
-    Data<Vec6> d_jointConfig; ///< input: [θ1,s1,θ2,s2,θ3,s3] wired from FK engine
-    Data<int>  d_nSamples;   ///< samples per section (default 20)
+    Data<Vec6> d_jointConfig;   ///< input: [θ1,s1,θ2,s2,θ3,s3] wired from FK engine
+    Data<int>  d_nSamples;      ///< samples per section (default 20)
+    Data<bool> d_useFlatColor;  ///< if true, draw the whole tube in d_color instead of blue/green/red
+    Data<sofa::type::RGBAColor> d_color; ///< flat RGBA colour used when d_useFlatColor is true (alpha<1 = transparent)
 
     // -------------------------------------------------------- SOFA life-cycle
     void doInitVisual(const sofa::core::visual::VisualParams* vparams) override;

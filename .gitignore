@@ -16,3 +16,6 @@ log.md
 
 # Python cache
 __pycache__/
+
+# Generated datasets
+scenes/dataset.npz
