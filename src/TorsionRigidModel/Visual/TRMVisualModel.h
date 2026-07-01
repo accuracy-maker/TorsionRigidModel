@@ -1,0 +1,69 @@
+/**
+ * @file TRMVisualModel.h
+ * @author Haitao Gao (haitao.gao@unsw.edu.au)
+ * @brief Draw the CTR backbone as a coloured polyline using SOFA DrawTool
+ * @version 0.1
+ * @date 2026-05-06
+ *
+ * @copyright Copyright (c) 2026
+ */
+
+#pragma once
+
+#include <sofa/core/visual/VisualModel.h>
+#include <sofa/core/visual/VisualParams.h>
+#include <sofa/core/ExecParams.h>
+#include <sofa/type/Vec.h>
+#include <sofa/type/RGBAColor.h>
+#include <sofa/type/BoundingBox.h>
+
+#include "core/ForwardKinematics.h"
+
+namespace TRMCTR::visual
+{
+
+using sofa::core::objectmodel::Data;
+
+/**
+ * Draws the 3-section CTR backbone every render frame.
+ *
+ * Wire d_jointConfig from a TRMForwardKinematicsEngine (or IK controller):
+ * @code
+ * <TRMVisualModel name="visual"
+ *     d_jointConfig="@fk.d_jointConfig"
+ *     d_nSamples="20" />
+ * @endcode
+ *
+ * By default each section is drawn in a distinct colour:
+ *   Section 1 (all tubes)   — blue
+ *   Section 2 (tubes 2+3)   — green
+ *   Section 3 (tube 3 only) — red
+ *
+ * Set d_useFlatColor=true to instead draw the whole tube (all sections + tip)
+ * in a single d_color, e.g. to overlay a second CTR instance for comparison.
+ * d_color's alpha channel controls transparency (alpha<1 is blended).
+ */
+class TRMVisualModel : public sofa::core::visual::VisualModel
+{
+public:
+    SOFA_CLASS(TRMVisualModel, sofa::core::visual::VisualModel);
+
+    using Vec6 = sofa::type::Vec<6, double>;
+
+    // ------------------------------------------------------------------ Data
+    Data<Vec6> d_jointConfig;   ///< input: [θ1,s1,θ2,s2,θ3,s3] wired from FK engine
+    Data<int>  d_nSamples;      ///< samples per section (default 20)
+    Data<bool> d_useFlatColor;  ///< if true, draw the whole tube in d_color instead of blue/green/red
+    Data<sofa::type::RGBAColor> d_color; ///< flat RGBA colour used when d_useFlatColor is true (alpha<1 = transparent)
+
+    // -------------------------------------------------------- SOFA life-cycle
+    void doInitVisual(const sofa::core::visual::VisualParams* vparams) override;
+    void doDrawVisual(const sofa::core::visual::VisualParams* vparams) override;
+    void computeBBox(const sofa::core::ExecParams* params, bool onlyVisible = false) override;
+
+protected:
+    TRMVisualModel();
+    ~TRMVisualModel() override = default;
+};
+
+} // namespace TRMCTR::visual
