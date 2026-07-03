@@ -3,27 +3,12 @@ Build a (configuration space, workspace) dataset for the 3-tube CTR by driving
 the TRMForwardKinematicsEngine DataEngine over a Sobol low-discrepancy sample
 of the 6-DOF joint space.
 
-There is no direct Python binding of CTR::ForwardKinematics::FK() — the only
-Python-reachable entry point is the SOFA component TRMForwardKinematicsEngine
-(see scenes/CTR_visual_fk_test.py). This script builds a single headless node
-hosting that engine, then for each sample q writes fk.d_jointConfig and reads
-back fk.d_endEffectorPose and fk.d_manipulability (the DataEngine lazily
-recomputes on read since d_jointConfig is a registered input).
-
 d_manipulability is the Yoshikawa measure sqrt(det(J*J^T)), computed in C++
 from CTR::InverseKinematics::Jacobian(q) (TRMForwardKinematicsEngine.cpp) —
 values near 0 indicate a singular / low-dexterity configuration.
 
-Joint convention (RobotParameters.h): q = [theta1, s1, theta2, s2, theta3, s3]
-(rad, mm). Per-tube arc-length limits differ (S3_MIN=25 vs 10 for tubes 1/2).
-
-This script builds its own headless Sofa.Core.Node and calls Sofa.Simulation.init
-directly — it is a plain Python script, not a SOFA scene, so it must be run with
-`python3` (not `runSofa`, which would try to load it as a scene and treat any
-trailing arguments as additional scene files).
-
 Usage:
-    SOFA_ROOT=/path/to/sofa/build python3 build_dataset.py --n-samples 100000 --output dataset.npz
+    SOFA_ROOT=/home/z5506409/sofa/build python3 src/applications/plugins/TorsionRigidModel/scenes/build_dataset.py --n-samples 100000 --output dataset.npz
 """
 import argparse
 import math
@@ -59,6 +44,7 @@ def sobol_joint_samples(n_samples, seed=None):
     sampler = qmc.Sobol(d=6, scramble=True, seed=seed)
     m = math.ceil(math.log2(max(n_samples, 1)))
     u = sampler.random_base2(m=m)[:n_samples]  # in [0,1]^6
+    # print(f"discrepancy of generated samples is: {qmc.discrepancy(u)}")
     return qmc.scale(u, Q_LOW, Q_HIGH)
 
 

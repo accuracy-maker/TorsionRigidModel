@@ -1,3 +1,7 @@
+"""
+This script aims to visualise the generated dataset.
+
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -15,6 +19,17 @@ ax.set_xlabel("x (mm)")
 ax.set_ylabel("y (mm)")
 ax.set_zlabel("z (mm)")
 ax.set_title("CTR workspace (tip position, coloured by manipulability)")
+
+fig4, axes4 = plt.subplots(1, 3, figsize=(15, 5))
+projections = [(0, 1, "x", "y", "xy"), (1, 2, "y", "z", "yz"), (0, 2, "x", "z", "xz")]
+for ax_i, (i, j, label_i, label_j, name) in zip(axes4, projections):
+    sc_i = ax_i.scatter(x[:, i], x[:, j], c=manipulability, cmap="viridis", s=2, alpha=0.5)
+    ax_i.set_xlabel(f"{label_i} (mm)")
+    ax_i.set_ylabel(f"{label_j} (mm)")
+    ax_i.set_title(f"{name} projection")
+    ax_i.set_aspect("equal")
+fig4.colorbar(sc_i, ax=axes4, shrink=0.6, label="manipulability sqrt(det(Jp*Jp^T))")
+fig4.suptitle("CTR workspace projections")
 
 joint_labels = ["theta1 (rad)", "s1 (mm)", "theta2 (rad)", "s2 (mm)", "theta3 (rad)", "s3 (mm)"]
 fig2, axes = plt.subplots(2, 3, figsize=(12, 6))

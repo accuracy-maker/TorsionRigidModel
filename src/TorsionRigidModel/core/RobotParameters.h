@@ -20,12 +20,12 @@ namespace CTR {
         // stiffness matrix
         inline static const Eigen::Matrix3d K1 = Eigen::Matrix3d::Identity() * 100.0;
         inline static const Eigen::Matrix3d K2 = Eigen::Matrix3d::Identity() * 10.0;
-        inline static const Eigen::Matrix3d K3 = Eigen::Matrix3d::Identity() * 0.0;
+        inline static const Eigen::Matrix3d K3 = Eigen::Matrix3d::Identity() * 1.0;
 
         // curvature vector
-        inline static const Eigen::Vector3d U1F1 = Eigen::Vector3d(0, 0, 0);
+        inline static const Eigen::Vector3d U1F1 = Eigen::Vector3d(0, 1.0 / 180.0, 0);
         inline static const Eigen::Vector3d U2F2 = Eigen::Vector3d(0, 1.0 / 173.58, 0);
-        inline static const Eigen::Vector3d U3F3 = Eigen::Vector3d(0, 0, 0);
+        inline static const Eigen::Vector3d U3F3 = Eigen::Vector3d(0, -1.0 / 150.0, 0);
 
         // Joint Limit
         static constexpr double S1_MAX = 100.0;
